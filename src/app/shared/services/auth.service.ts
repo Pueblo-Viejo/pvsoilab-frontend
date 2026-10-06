@@ -10,6 +10,7 @@ export type AuthUser = {
   email: string;
   userLevel: number | null;
   status: number | null;
+  imageUrl?: string | null;
 };
 
 type AuthResponse = {
@@ -39,6 +40,25 @@ export class AuthService {
         map((response) => {
           if (!response.authenticated || !response.user) {
             throw new Error(response.message || 'No se pudo iniciar sesion.');
+          }
+
+          return response.user;
+        }),
+        tap((user) => {
+          this.user.set(user);
+          this.checkedSession.set(true);
+        }),
+        catchError((error) => throwError(() => this.getErrorMessage(error)))
+      );
+  }
+
+  register(payload: { name: string; username: string; email: string; password: string }): Observable<AuthUser> {
+    return this.http
+      .post<AuthResponse>(`${this.authUrl}?action=register`, payload, { withCredentials: true })
+      .pipe(
+        map((response) => {
+          if (!response.authenticated || !response.user) {
+            throw new Error(response.message || 'No se pudo crear la cuenta.');
           }
 
           return response.user;

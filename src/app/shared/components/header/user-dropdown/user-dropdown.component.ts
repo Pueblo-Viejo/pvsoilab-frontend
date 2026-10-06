@@ -1,6 +1,7 @@
 import { Component, ElementRef, HostListener, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
+import { AuthService, AuthUser } from '../../../services/auth.service';
 
 export interface Language {
   id: string;
@@ -49,7 +50,11 @@ export class UserDropdownComponent implements OnInit {
     },
   ];
 
-  constructor(private elementRef: ElementRef) {}
+  constructor(
+    private elementRef: ElementRef,
+    public authService: AuthService,
+    private router: Router
+  ) {}
 
   ngOnInit(): void {
     const savedDir = localStorage.getItem('dir');
@@ -64,6 +69,32 @@ export class UserDropdownComponent implements OnInit {
 
   get currentLang(): Language {
     return this.languages.find((l) => l.id === this.currentLocale) || this.languages[0];
+  }
+
+  get user(): AuthUser | null {
+    return this.authService.user();
+  }
+
+  get displayName(): string {
+    return this.user?.name || this.user?.username || 'User';
+  }
+
+  get displayEmail(): string {
+    return this.user?.email || this.user?.username || '';
+  }
+
+  get userImageUrl(): string | null {
+    return this.user?.imageUrl || null;
+  }
+
+  get initials(): string {
+    const value = this.displayName.trim();
+    if (!value) {
+      return 'U';
+    }
+
+    const parts = value.split(/\s+/).slice(0, 2);
+    return parts.map((part) => part.charAt(0).toUpperCase()).join('');
   }
 
   toggleDropdown(event?: Event): void {
@@ -95,6 +126,13 @@ export class UserDropdownComponent implements OnInit {
       localStorage.setItem('dir', 'ltr');
     }
     this.closeDropdown();
+  }
+
+  signOut(): void {
+    this.authService.logout().subscribe(() => {
+      this.closeDropdown();
+      this.router.navigateByUrl('/signin');
+    });
   }
 
   @HostListener('document:click', ['$event'])
