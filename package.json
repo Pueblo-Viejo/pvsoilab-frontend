@@ -10,7 +10,7 @@
     },
     "private": true,
     "engines": {
-        "node": "22.22.3"
+        "node": "^22.18.0"
     },
     "dependencies": {
         "@amcharts/amcharts5": "^5.13.5",
