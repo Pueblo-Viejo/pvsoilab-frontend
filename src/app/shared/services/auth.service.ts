@@ -17,6 +17,7 @@ type AuthResponse = {
   authenticated: boolean;
   user?: AuthUser;
   message?: string;
+  token?: string;
 };
 
 @Injectable({
@@ -25,6 +26,7 @@ type AuthResponse = {
 export class AuthService {
   private readonly http = inject(HttpClient);
   private readonly authUrl = `${environment.apiUrl}/auth.php`;
+  private readonly tokenKey = 'pvsoilab_auth_token';
 
   readonly user = signal<AuthUser | null>(null);
   readonly checkedSession = signal(false);
@@ -37,13 +39,7 @@ export class AuthService {
         { withCredentials: true }
       )
       .pipe(
-        map((response) => {
-          if (!response.authenticated || !response.user) {
-            throw new Error(response.message || 'No se pudo iniciar sesion.');
-          }
-
-          return response.user;
-        }),
+        map((response) => this.saveSession(response)),
         tap((user) => {
           this.user.set(user);
           this.checkedSession.set(true);
@@ -56,13 +52,7 @@ export class AuthService {
     return this.http
       .post<AuthResponse>(`${this.authUrl}?action=register`, payload, { withCredentials: true })
       .pipe(
-        map((response) => {
-          if (!response.authenticated || !response.user) {
-            throw new Error(response.message || 'No se pudo crear la cuenta.');
-          }
-
-          return response.user;
-        }),
+        map((response) => this.saveSession(response)),
         tap((user) => {
           this.user.set(user);
           this.checkedSession.set(true);
@@ -73,9 +63,12 @@ export class AuthService {
 
   me(): Observable<AuthUser | null> {
     return this.http
-      .get<AuthResponse>(`${this.authUrl}?action=me`, { withCredentials: true })
+      .get<AuthResponse>(`${this.authUrl}?action=me`, {
+        withCredentials: true,
+        headers: this.authHeaders(),
+      })
       .pipe(
-        map((response) => (response.authenticated && response.user ? response.user : null)),
+        map((response) => (response.authenticated && response.user ? this.saveSession(response) : null)),
         tap((user) => {
           this.user.set(user);
           this.checkedSession.set(true);
@@ -93,12 +86,34 @@ export class AuthService {
       .get<{ ok: boolean }>(`${this.authUrl}?action=logout`, { withCredentials: true })
       .pipe(
         map(() => undefined),
-        tap(() => this.user.set(null)),
+        tap(() => this.clearSession()),
         catchError(() => {
-          this.user.set(null);
+          this.clearSession();
           return of(undefined);
         })
       );
+  }
+
+  private authHeaders(): Record<string, string> {
+    const token = localStorage.getItem(this.tokenKey);
+    return token ? { Authorization: `Bearer ${token}` } : {};
+  }
+
+  private saveSession(response: AuthResponse): AuthUser {
+    if (!response.authenticated || !response.user) {
+      throw new Error(response.message || 'No pudimos completar la solicitud. Intenta de nuevo en unos momentos.');
+    }
+
+    if (response.token) {
+      localStorage.setItem(this.tokenKey, response.token);
+    }
+
+    return response.user;
+  }
+
+  private clearSession(): void {
+    localStorage.removeItem(this.tokenKey);
+    this.user.set(null);
   }
 
   private getErrorMessage(error: unknown): string {
@@ -108,7 +123,7 @@ export class AuthService {
       }
 
       if (error.status === 0) {
-        return 'No se pudo conectar con el servidor de autenticacion.';
+        return 'No pudimos completar la solicitud. Intenta de nuevo en unos momentos.';
       }
     }
 
@@ -116,6 +131,6 @@ export class AuthService {
       return error.message;
     }
 
-    return 'No se pudo iniciar sesion.';
+    return 'No pudimos completar la solicitud. Intenta de nuevo en unos momentos.';
   }
 }
