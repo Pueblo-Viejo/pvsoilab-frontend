@@ -1,6 +1,4 @@
-# AGENTS.md — TailAdmin Free Angular
-
-> Free Angular 22 administrative dashboard template · Standalone Components · Tailwind CSS v4 · ApexCharts · FullCalendar · Flatpickr · Swiper · RTL Layout Support
+# AGENTS.md — PV Soil Lab
 
 ## Repo Map
 
@@ -130,7 +128,7 @@ src/
 - Don't install new NPM dependencies or packages without asking the user.
 - Don't add multi-language translation libraries or `TranslatePipe` to the free version — keep text strings in English directly.
 - Don't create `tailwind.config.js` — Tailwind CSS v4 configuration belongs in `src/styles.css`.
-- Don't edit files in other projects (`tailadmin-html-pro`, `tailadmin-laravel-pro`, `tailadmin-angular-pro`) unless explicitly instructed.
+- Don't edit files outside this project unless explicitly instructed.
 - Don't use legacy Angular syntax (`*ngIf`, `*ngFor`, `*ngSwitch`) — use modern `@if`, `@for`, `@switch` control flow.
 - Don't hardcode physical directional utilities (`ml-*`, `mr-*`, `left-*`, `right-*`, `pl-*`, `pr-*`, `text-left`, `text-right`) without providing RTL compatibility (`ms-*`, `me-*`, `start-*`, `end-*`, `text-start`, etc.).
 - Don't write inline CSS `style="..."` attributes when Tailwind CSS tokens and utility classes are available.

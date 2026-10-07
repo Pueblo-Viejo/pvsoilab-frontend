@@ -39,13 +39,13 @@ export const routes: Routes = [
     path:'signin',
     component:SignInComponent,
     canActivate: [guestGuard],
-    title:'Angular Sign In Dashboard | TailAdmin - Angular Admin Dashboard Template'
+    title: 'PV Soil Lab | Sign In'
   },
   {
     path:'signup',
     component:SignUpComponent,
     canActivate: [guestGuard],
-    title:'Angular Sign Up Dashboard | TailAdmin - Angular Admin Dashboard Template'
+    title: 'PV Soil Lab | Sign Up'
   },
   // error pages
   {
