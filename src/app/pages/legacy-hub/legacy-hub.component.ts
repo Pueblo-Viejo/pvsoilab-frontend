@@ -1,6 +1,7 @@
 import { Component } from '@angular/core';
 import { environment } from '../../../environments/environment';
 import { PageBreadcrumbComponent } from '../../shared/components/common/page-breadcrumb/page-breadcrumb.component';
+import { AuthService } from '../../shared/services/auth.service';
 
 type LegacyOption = {
   title: string;
@@ -22,6 +23,8 @@ type LegacyGroup = {
 export class LegacyHubComponent {
   private readonly legacyUrlBase = environment.legacyUrl;
 
+  constructor(private authService: AuthService) {}
+
   readonly groups: LegacyGroup[] = [
     {
       title: 'Available menus',
@@ -37,6 +40,13 @@ export class LegacyHubComponent {
   ];
 
   legacyUrl(path: string): string {
-    return `${this.legacyUrlBase}${path}`;
+    const token = this.authService.legacyToken();
+    if (!token) {
+      return `${this.legacyUrlBase}${path}`;
+    }
+
+    const redirect = encodeURIComponent(path);
+    const encodedToken = encodeURIComponent(token);
+    return `${this.legacyUrlBase}/api/auth.php?action=handoff&redirect=${redirect}&token=${encodedToken}`;
   }
 }

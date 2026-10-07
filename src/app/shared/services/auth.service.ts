@@ -116,6 +116,10 @@ export class AuthService {
     this.user.set(null);
   }
 
+  legacyToken(): string {
+    return localStorage.getItem(this.tokenKey) || '';
+  }
+
   private getErrorMessage(error: unknown): string {
     if (error instanceof HttpErrorResponse) {
       if (typeof error.error?.message === 'string') {
