@@ -35,6 +35,24 @@ export class AppSidebarComponent {
         { name: "Legacy System", path: "/" },
       ],
     },
+    {
+      icon: `<svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M7 4.75H17C18.2426 4.75 19.25 5.75736 19.25 7V17C19.25 18.2426 18.2426 19.25 17 19.25H7C5.75736 19.25 4.75 18.2426 4.75 17V7C4.75 5.75736 5.75736 4.75 7 4.75Z" stroke="currentColor" stroke-width="1.5"/><path d="M8 9H16M8 12H16M8 15H12.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>`,
+      name: "Requisiciones",
+      subItems: [
+        { name: "Menu", path: "/requisitions" },
+        { name: "Numero siguiente", path: "/requisitions/next-number" },
+        { name: "Nueva requisicion", path: "/requisitions/new" },
+        { name: "Muestras registradas", path: "/requisitions/registered-samples" },
+      ],
+    },
+    {
+      icon: `<svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4.75 6.75H19.25M4.75 12H14.25M4.75 17.25H10.25" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M16 14L19 17L16 20" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
+      name: "Seguimiento",
+      subItems: [
+        { name: "Menu", path: "/tracking" },
+        { name: "Prioridades", path: "/tracking/priorities" },
+      ],
+    },
   ];
   // Others nav items
   othersItems: NavItem[] = [];

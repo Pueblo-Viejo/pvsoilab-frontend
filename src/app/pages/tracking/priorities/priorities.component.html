@@ -1,0 +1,171 @@
+<div>
+  <app-page-breadcrumb pageTitle="Prioridades" />
+
+  <section class="space-y-5">
+    <div class="rounded-lg border border-gray-200 bg-white p-5 shadow-theme-xs dark:border-gray-800 dark:bg-white/[0.03]">
+      <div class="mb-5 flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
+        <div>
+          <h3 class="text-lg font-semibold text-gray-800 dark:text-white/90">Prioridades de ensayos</h3>
+          <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Muestras con ensayos pendientes ordenadas por prioridad operativa.</p>
+        </div>
+
+        <div class="grid w-full grid-cols-1 gap-3 md:grid-cols-2 xl:max-w-5xl xl:grid-cols-[140px_140px_minmax(160px,1fr)_150px_minmax(220px,1.3fr)_110px]">
+          <input class="h-11 rounded-lg border border-gray-300 bg-transparent px-3 text-sm text-gray-800 outline-hidden focus:border-brand-300 focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90" type="date" [(ngModel)]="filters.from" />
+          <input class="h-11 rounded-lg border border-gray-300 bg-transparent px-3 text-sm text-gray-800 outline-hidden focus:border-brand-300 focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90" type="date" [(ngModel)]="filters.to" />
+          <select class="h-11 rounded-lg border border-gray-300 bg-transparent px-3 text-sm text-gray-800 outline-hidden focus:border-brand-300 focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90" [(ngModel)]="filters.client">
+            <option value="">Todos los clientes</option>
+            @for (client of clients(); track client) {
+              <option [value]="client">{{ client }}</option>
+            }
+          </select>
+          <select class="h-11 rounded-lg border border-gray-300 bg-transparent px-3 text-sm text-gray-800 outline-hidden focus:border-brand-300 focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90" [(ngModel)]="filters.priority">
+            <option value="">Todas</option>
+            <option value="Alta">Alta</option>
+            <option value="Media">Media</option>
+            <option value="Normal">Normal</option>
+          </select>
+          <input
+            class="h-11 rounded-lg border border-gray-300 bg-transparent px-3 text-sm text-gray-800 outline-hidden focus:border-brand-300 focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90"
+            type="search"
+            placeholder="Buscar muestra, estructura, ensayo..."
+            [(ngModel)]="filters.q"
+            (keyup.enter)="load()"
+          />
+          <button
+            type="button"
+            class="inline-flex h-11 items-center justify-center rounded-lg bg-brand-500 px-4 text-sm font-medium text-white shadow-theme-xs transition hover:bg-brand-600 disabled:cursor-not-allowed disabled:opacity-60"
+            [disabled]="loading()"
+            (click)="load()"
+          >
+            {{ loading() ? 'Cargando' : 'Filtrar' }}
+          </button>
+        </div>
+      </div>
+
+      @if (error()) {
+        <div class="mb-4 rounded-lg border border-error-200 bg-error-50 px-4 py-3 text-sm text-error-700 dark:border-error-500/30 dark:bg-error-500/10 dark:text-error-300">
+          {{ error() }}
+        </div>
+      }
+
+      <div class="grid grid-cols-2 gap-3 xl:grid-cols-5">
+        <div class="rounded-lg border border-gray-200 p-4 dark:border-gray-800">
+          <p class="text-xs font-medium uppercase text-gray-500 dark:text-gray-400">Muestras</p>
+          <p class="mt-2 text-2xl font-semibold text-gray-800 dark:text-white/90">{{ summary().samples }}</p>
+        </div>
+        <div class="rounded-lg border border-gray-200 p-4 dark:border-gray-800">
+          <p class="text-xs font-medium uppercase text-gray-500 dark:text-gray-400">Solicitados</p>
+          <p class="mt-2 text-2xl font-semibold text-gray-800 dark:text-white/90">{{ summary().requested }}</p>
+        </div>
+        <div class="rounded-lg border border-gray-200 p-4 dark:border-gray-800">
+          <p class="text-xs font-medium uppercase text-gray-500 dark:text-gray-400">Completados</p>
+          <p class="mt-2 text-2xl font-semibold text-gray-800 dark:text-white/90">{{ summary().done }}</p>
+        </div>
+        <div class="rounded-lg border border-gray-200 p-4 dark:border-gray-800">
+          <p class="text-xs font-medium uppercase text-gray-500 dark:text-gray-400">Pendientes</p>
+          <p class="mt-2 text-2xl font-semibold text-error-600 dark:text-error-400">{{ summary().pending }}</p>
+        </div>
+        <div class="rounded-lg border border-gray-200 p-4 dark:border-gray-800">
+          <p class="text-xs font-medium uppercase text-gray-500 dark:text-gray-400">Progreso</p>
+          <p class="mt-2 text-2xl font-semibold text-gray-800 dark:text-white/90">{{ summary().progress }}%</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid gap-5 xl:grid-cols-[minmax(0,1fr)_320px]">
+      <section class="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-theme-xs dark:border-gray-800 dark:bg-white/[0.03]">
+        <div class="border-b border-gray-200 px-5 py-4 dark:border-gray-800">
+          <h4 class="text-base font-semibold text-gray-800 dark:text-white/90">Detalle</h4>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-800">
+            <thead class="bg-gray-50 dark:bg-white/[0.03]">
+              <tr>
+                <th class="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500 dark:text-gray-400">Muestra</th>
+                <th class="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500 dark:text-gray-400">Cliente</th>
+                <th class="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500 dark:text-gray-400">Prioridad</th>
+                <th class="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500 dark:text-gray-400">Ensayos</th>
+                <th class="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500 dark:text-gray-400">Progreso</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100 dark:divide-gray-800">
+              @if (loading()) {
+                <tr>
+                  <td colspan="5" class="px-4 py-8 text-center text-sm text-gray-500 dark:text-gray-400">Cargando prioridades...</td>
+                </tr>
+              } @else if (!items().length) {
+                <tr>
+                  <td colspan="5" class="px-4 py-8 text-center text-sm text-gray-500 dark:text-gray-400">No hay prioridades pendientes para mostrar.</td>
+                </tr>
+              } @else {
+                @for (item of items(); track item.sample_id + item.sample_number + item.priority) {
+                  <tr class="align-top">
+                    <td class="px-4 py-4">
+                      <p class="font-medium text-gray-800 dark:text-white/90">{{ item.sample_id }} - {{ item.sample_number }}</p>
+                      <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">{{ item.sample_date }} · {{ item.structure || '-' }}</p>
+                    </td>
+                    <td class="px-4 py-4 text-sm text-gray-700 dark:text-gray-300">{{ item.client }}</td>
+                    <td class="px-4 py-4">
+                      <span [class]="'rounded-full px-2.5 py-1 text-xs font-semibold ' + priorityClass(item.priority)">{{ item.priority }}</span>
+                    </td>
+                    <td class="px-4 py-4">
+                      <div class="flex max-w-xl flex-wrap gap-1.5">
+                        @for (test of item.tests; track test.norm) {
+                          <span [class]="'rounded-full border px-2 py-0.5 text-xs font-medium ' + testClass(test.done)">
+                            {{ test.done ? 'OK' : 'Pendiente' }} · {{ test.label }}
+                          </span>
+                        }
+                      </div>
+                      @if (item.comment) {
+                        <p class="mt-2 max-w-xl text-xs text-gray-500 dark:text-gray-400">{{ item.comment }}</p>
+                      }
+                    </td>
+                    <td class="px-4 py-4">
+                      <div class="min-w-32">
+                        <div class="h-2 overflow-hidden rounded-full bg-gray-100 dark:bg-white/[0.08]">
+                          <div class="h-full rounded-full bg-brand-500" [style.width.%]="item.progress"></div>
+                        </div>
+                        <p class="mt-1 text-xs font-medium text-gray-600 dark:text-gray-300">{{ item.done }} / {{ item.requested }} · {{ item.progress }}%</p>
+                      </div>
+                    </td>
+                  </tr>
+                }
+              }
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <aside class="space-y-5">
+        <section class="rounded-lg border border-gray-200 bg-white p-4 shadow-theme-xs dark:border-gray-800 dark:bg-white/[0.03]">
+          <h4 class="text-sm font-semibold text-gray-800 dark:text-white/90">Por prioridad</h4>
+          <div class="mt-4 space-y-3">
+            @for (priority of ['Alta', 'Media', 'Normal']; track priority) {
+              <div class="flex items-center justify-between rounded-lg bg-gray-50 px-3 py-2 text-sm dark:bg-white/[0.03]">
+                <span [class]="'rounded-full px-2 py-0.5 text-xs font-semibold ' + priorityClass(priority)">{{ priority }}</span>
+                <strong class="text-gray-800 dark:text-white/90">{{ summary().priority_counts[priority] || 0 }}</strong>
+              </div>
+            }
+          </div>
+        </section>
+
+        <section class="rounded-lg border border-gray-200 bg-white p-4 shadow-theme-xs dark:border-gray-800 dark:bg-white/[0.03]">
+          <h4 class="text-sm font-semibold text-gray-800 dark:text-white/90">Pendientes por cliente</h4>
+          <div class="mt-4 space-y-3">
+            @for (client of topClients(); track client[0]) {
+              <div>
+                <div class="mb-1 flex items-center justify-between text-sm">
+                  <span class="truncate text-gray-600 dark:text-gray-300">{{ client[0] }}</span>
+                  <strong class="text-gray-800 dark:text-white/90">{{ client[1] }}</strong>
+                </div>
+                <div class="h-2 overflow-hidden rounded-full bg-gray-100 dark:bg-white/[0.08]">
+                  <div class="h-full rounded-full bg-brand-500" [style.width.%]="summary().pending ? (client[1] / summary().pending) * 100 : 0"></div>
+                </div>
+              </div>
+            }
+          </div>
+        </section>
+      </aside>
+    </div>
+  </section>
+</div>

@@ -1,0 +1,419 @@
+<div>
+  <app-page-breadcrumb pageTitle="Muestras registradas" />
+
+  <section class="rounded-lg border border-gray-200 bg-white p-5 shadow-theme-xs dark:border-gray-800 dark:bg-white/[0.03]">
+    <div class="mb-5 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+      <div>
+        <h3 class="text-lg font-semibold text-gray-800 dark:text-white/90">
+          Listado de requisiciones
+        </h3>
+        <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+          {{ packageCount() }} paquetes encontrados
+        </p>
+      </div>
+
+      <div class="grid w-full grid-cols-1 gap-3 sm:grid-cols-[minmax(0,1fr)_120px_120px] lg:max-w-2xl">
+        <input
+          type="search"
+          class="h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 outline-hidden focus:border-brand-300 focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90"
+          placeholder="Buscar muestra, paquete, ensayo..."
+          [(ngModel)]="query"
+          (keyup.enter)="load()"
+        />
+
+        <select
+          class="h-11 w-full rounded-lg border border-gray-300 bg-transparent px-3 py-2.5 text-sm text-gray-800 outline-hidden focus:border-brand-300 focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90"
+          [(ngModel)]="months"
+        >
+          <option [ngValue]="1">1 mes</option>
+          <option [ngValue]="3">3 meses</option>
+          <option [ngValue]="6">6 meses</option>
+          <option [ngValue]="12">12 meses</option>
+        </select>
+
+        <button
+          type="button"
+          class="inline-flex h-11 items-center justify-center rounded-lg bg-brand-500 px-4 text-sm font-medium text-white shadow-theme-xs transition hover:bg-brand-600 disabled:cursor-not-allowed disabled:opacity-60"
+          [disabled]="loading()"
+          (click)="load()"
+        >
+          {{ loading() ? 'Cargando' : 'Buscar' }}
+        </button>
+      </div>
+    </div>
+
+    @if (error()) {
+      <div class="mb-4 rounded-lg border border-error-200 bg-error-50 px-4 py-3 text-sm text-error-700 dark:border-error-500/30 dark:bg-error-500/10 dark:text-error-300">
+        {{ error() }}
+      </div>
+    }
+
+    @if (success()) {
+      <div class="mb-4 rounded-lg border border-success-200 bg-success-50 px-4 py-3 text-sm text-success-700 dark:border-success-500/30 dark:bg-success-500/10 dark:text-success-300">
+        {{ success() }}
+      </div>
+    }
+
+    <div class="overflow-hidden rounded-lg border border-gray-200 dark:border-gray-800">
+      <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-800">
+          <thead class="bg-gray-50 dark:bg-white/[0.03]">
+            <tr>
+              <th class="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500 dark:text-gray-400">Nombre</th>
+              <th class="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500 dark:text-gray-400">Numeros</th>
+              <th class="px-4 py-3 text-left text-xs font-medium uppercase text-gray-500 dark:text-gray-400">Solicitados</th>
+              <th class="px-4 py-3 text-right text-xs font-medium uppercase text-gray-500 dark:text-gray-400">Acciones</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-100 dark:divide-gray-800">
+            @if (loading()) {
+              <tr>
+                <td colspan="4" class="px-4 py-8 text-center text-sm text-gray-500 dark:text-gray-400">Cargando muestras...</td>
+              </tr>
+            } @else if (!packages().length) {
+              <tr>
+                <td colspan="4" class="px-4 py-8 text-center text-sm text-gray-500 dark:text-gray-400">No hay muestras para mostrar.</td>
+              </tr>
+            } @else {
+              @for (item of packages(); track item.package_id) {
+                <tr class="align-top">
+                  <td class="px-4 py-4">
+                    <div class="font-medium text-gray-800 dark:text-white/90">{{ item.sample_id || item.package_id }}</div>
+                    <div class="mt-1 text-xs text-gray-500 dark:text-gray-400">Paquete {{ item.package_id }}</div>
+                  </td>
+                  <td class="px-4 py-4">
+                    <div class="flex max-w-xs flex-wrap gap-1.5">
+                      @for (sampleNumber of item.sample_numbers; track sampleNumber) {
+                        <span class="rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-700 dark:bg-white/[0.06] dark:text-gray-300">{{ sampleNumber }}</span>
+                      }
+                    </div>
+                  </td>
+                  <td class="px-4 py-4 text-sm text-gray-700 dark:text-gray-300">{{ item.requested_count }}</td>
+                  <td class="px-4 py-4 text-right">
+                    <div class="flex justify-end gap-2">
+                      <button
+                        type="button"
+                        class="rounded-lg border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-white/[0.05]"
+                        (click)="openDetails(item)"
+                      >
+                        Ver
+                      </button>
+                      <a
+                        routerLink="/requisitions/new"
+                        [queryParams]="{ package_id: item.package_id }"
+                        class="rounded-lg border border-brand-300 px-3 py-2 text-sm font-medium text-brand-700 transition hover:bg-brand-50 dark:border-brand-500/60 dark:text-brand-300 dark:hover:bg-brand-500/10"
+                      >
+                        Editar
+                      </a>
+                      <button
+                        type="button"
+                        class="rounded-lg border border-error-300 px-3 py-2 text-sm font-medium text-error-700 transition hover:bg-error-50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-error-500/50 dark:text-error-300 dark:hover:bg-error-500/10"
+                        [disabled]="deletingPackageId() === item.package_id"
+                        (click)="deletePackage(item)"
+                      >
+                        {{ deletingPackageId() === item.package_id ? 'Eliminando' : 'Eliminar' }}
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              }
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  @if (selectedPackage(); as item) {
+    <div class="fixed inset-0 z-99999 flex items-center justify-center p-4">
+      <button
+        type="button"
+        class="absolute inset-0 bg-gray-900/50"
+        aria-label="Cerrar detalle"
+        (click)="closeDetails()"
+      ></button>
+
+      <section class="relative max-h-[90vh] w-full max-w-5xl overflow-hidden rounded-lg bg-white shadow-xl dark:bg-gray-900">
+        <div class="flex items-start justify-between gap-4 border-b border-gray-200 px-5 py-4 dark:border-gray-800">
+          <div>
+            <h3 class="text-lg font-semibold text-gray-800 dark:text-white/90">
+              Detalle del paquete
+            </h3>
+            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+              {{ item.sample_id || item.package_id }} · {{ item.package_id }}
+            </p>
+          </div>
+
+          <button
+            type="button"
+            class="flex size-9 items-center justify-center rounded-lg text-gray-500 transition hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-white/[0.06] dark:hover:text-gray-200"
+            aria-label="Cerrar"
+            (click)="closeDetails()"
+          >
+            <svg class="size-5" viewBox="0 0 20 20" fill="none" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+              <path d="M5 5L15 15M15 5L5 15" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" />
+            </svg>
+          </button>
+        </div>
+
+        <div class="max-h-[calc(90vh-76px)] overflow-y-auto p-5">
+          <div class="grid gap-4 lg:grid-cols-[minmax(0,1fr)_280px]">
+            <div class="space-y-3">
+              @for (sample of item.samples; track sample.sample_number) {
+                <div class="rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-gray-950">
+                  <div class="mb-3 flex flex-wrap items-center justify-between gap-2">
+                    <p class="font-medium text-gray-800 dark:text-white/90">Muestra {{ sample.sample_number }}</p>
+                    <p class="text-xs text-gray-500 dark:text-gray-400">{{ sample.requested_count }} ensayos solicitados</p>
+                  </div>
+                  <div class="flex flex-wrap gap-2">
+                    @for (test of sample.requested_tests; track test) {
+                      <span [class]="'rounded-full px-2.5 py-1 text-xs font-medium ' + testBadgeClass()">
+                        {{ test }}
+                      </span>
+                    }
+                  </div>
+                  @if (sample.comment) {
+                    <p class="mt-3 text-sm text-gray-500 dark:text-gray-400">{{ sample.comment }}</p>
+                  }
+                </div>
+              }
+            </div>
+
+            <aside class="rounded-lg border border-gray-200 bg-gray-50 p-4 text-sm dark:border-gray-800 dark:bg-white/[0.03]">
+              <p class="mb-3 font-medium text-gray-800 dark:text-white/90">Datos del paquete</p>
+              <dl class="space-y-3 text-gray-600 dark:text-gray-300">
+                <div>
+                  <dt class="text-xs uppercase text-gray-500 dark:text-gray-400">Fecha muestra</dt>
+                  <dd>{{ item.sample_date || '-' }}</dd>
+                </div>
+                <div>
+                  <dt class="text-xs uppercase text-gray-500 dark:text-gray-400">Fecha registro</dt>
+                  <dd>{{ item.registered_date || '-' }}</dd>
+                </div>
+                <div>
+                  <dt class="text-xs uppercase text-gray-500 dark:text-gray-400">Muestreado por</dt>
+                  <dd>{{ item.sample_by || '-' }}</dd>
+                </div>
+                <div>
+                  <dt class="text-xs uppercase text-gray-500 dark:text-gray-400">Ensayos solicitados</dt>
+                  <dd>{{ item.requested_count }}</dd>
+                </div>
+              </dl>
+            </aside>
+          </div>
+        </div>
+      </section>
+    </div>
+  }
+
+  @if (editingPackage(); as item) {
+    <div class="fixed inset-0 z-99999 flex items-center justify-center p-4">
+      <button
+        type="button"
+        class="absolute inset-0 bg-gray-900/50"
+        aria-label="Cerrar editor"
+        (click)="closeEdit()"
+      ></button>
+
+      <section class="relative max-h-[92vh] w-full max-w-6xl overflow-hidden rounded-lg bg-white shadow-xl dark:bg-gray-900">
+        <div class="flex items-start justify-between gap-4 border-b border-gray-200 px-5 py-4 dark:border-gray-800">
+          <div>
+            <h3 class="text-lg font-semibold text-gray-800 dark:text-white/90">Editar requisicion</h3>
+            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Paquete {{ item.package_id }}</p>
+          </div>
+
+          <button
+            type="button"
+            class="flex size-9 items-center justify-center rounded-lg text-gray-500 transition hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-white/[0.06] dark:hover:text-gray-200"
+            aria-label="Cerrar"
+            (click)="closeEdit()"
+          >
+            <svg class="size-5" viewBox="0 0 20 20" fill="none" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+              <path d="M5 5L15 15M15 5L5 15" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" />
+            </svg>
+          </button>
+        </div>
+
+        <div class="max-h-[calc(92vh-145px)] overflow-y-auto p-5">
+          <div class="space-y-5">
+            <section class="rounded-lg border border-gray-200 p-4 dark:border-gray-800">
+              <h4 class="mb-4 text-base font-semibold text-gray-800 dark:text-white/90">Datos generales</h4>
+              <div class="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+                <label class="block md:col-span-2">
+                  <span class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">Proyecto</span>
+                  <input class="h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 outline-hidden focus:border-brand-300 focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90" type="text" [(ngModel)]="editForm.project_name" />
+                </label>
+
+                <label class="block">
+                  <span class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">Cliente</span>
+                  <select class="h-11 w-full rounded-lg border border-gray-300 bg-transparent px-3 py-2.5 text-sm text-gray-800 outline-hidden focus:border-brand-300 focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90" [(ngModel)]="editForm.client">
+                    <option value="">Elegir...</option>
+                    @for (client of clients; track client) {
+                      <option [value]="client">{{ client }}</option>
+                    }
+                  </select>
+                </label>
+
+                <label class="block">
+                  <span class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">Numero proyecto</span>
+                  <input class="h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 outline-hidden focus:border-brand-300 focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90" type="text" [(ngModel)]="editForm.project_number" />
+                </label>
+
+                <label class="block">
+                  <span class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">Estructura</span>
+                  <select class="h-11 w-full rounded-lg border border-gray-300 bg-transparent px-3 py-2.5 text-sm text-gray-800 outline-hidden focus:border-brand-300 focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90" [(ngModel)]="editForm.structure">
+                    <option value="">Seleccione...</option>
+                    @for (structure of structures; track structure) {
+                      <option [value]="structure">{{ structure }}</option>
+                    }
+                  </select>
+                </label>
+
+                <label class="block">
+                  <span class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">Fecha coleccion</span>
+                  <input class="h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 outline-hidden focus:border-brand-300 focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90" type="date" [(ngModel)]="editForm.sample_date" />
+                </label>
+
+                <label class="block">
+                  <span class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">Muestreado por</span>
+                  <input class="h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 outline-hidden focus:border-brand-300 focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90" type="text" [(ngModel)]="editForm.sample_by" />
+                </label>
+
+                <label class="block">
+                  <span class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">Viajes</span>
+                  <input class="h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 outline-hidden focus:border-brand-300 focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90" type="text" [(ngModel)]="editForm.truck_count" />
+                </label>
+              </div>
+            </section>
+
+            @for (sample of editSamples; track sample.id; let sampleIndex = $index) {
+              <section class="rounded-lg border border-gray-200 p-4 dark:border-gray-800">
+                <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
+                  <h4 class="text-base font-semibold text-gray-800 dark:text-white/90">Muestra {{ sampleIndex + 1 }}</h4>
+                  <span class="rounded-full bg-gray-100 px-3 py-1 text-xs font-medium text-gray-600 dark:bg-white/[0.06] dark:text-gray-300">{{ sample.tests.length }} ensayos</span>
+                </div>
+
+                <div class="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+                  <label class="block">
+                    <span class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">Nombre</span>
+                    <input class="h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 outline-hidden focus:border-brand-300 focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90" type="text" [(ngModel)]="sample.sample_id" />
+                  </label>
+
+                  <label class="block">
+                    <span class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">Numero</span>
+                    <input class="h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 outline-hidden focus:border-brand-300 focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90" type="text" [(ngModel)]="sample.sample_number" />
+                  </label>
+
+                  <label class="block">
+                    <span class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">Material</span>
+                    <select class="h-11 w-full rounded-lg border border-gray-300 bg-transparent px-3 py-2.5 text-sm text-gray-800 outline-hidden focus:border-brand-300 focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90" [(ngModel)]="sample.material_type">
+                      <option value="">Elegir...</option>
+                      @for (type of materialTypes; track type) {
+                        <option [value]="type">{{ type }}</option>
+                      }
+                    </select>
+                  </label>
+
+                  <label class="block">
+                    <span class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">Tipo muestra</span>
+                    <select class="h-11 w-full rounded-lg border border-gray-300 bg-transparent px-3 py-2.5 text-sm text-gray-800 outline-hidden focus:border-brand-300 focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90" [(ngModel)]="sample.sample_type">
+                      <option value="">Elegir...</option>
+                      @for (type of sampleTypes; track type) {
+                        <option [value]="type">{{ type }}</option>
+                      }
+                    </select>
+                  </label>
+
+                  <label class="block">
+                    <span class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">Area</span>
+                    <input class="h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 outline-hidden focus:border-brand-300 focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90" type="text" [(ngModel)]="sample.area" />
+                  </label>
+
+                  <label class="block">
+                    <span class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">Fuente</span>
+                    <input class="h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 outline-hidden focus:border-brand-300 focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90" type="text" [(ngModel)]="sample.source" />
+                  </label>
+
+                  <label class="block">
+                    <span class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">Desde</span>
+                    <input class="h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 outline-hidden focus:border-brand-300 focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90" type="text" [(ngModel)]="sample.depth_from" />
+                  </label>
+
+                  <label class="block">
+                    <span class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">Hasta</span>
+                    <input class="h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 outline-hidden focus:border-brand-300 focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90" type="text" [(ngModel)]="sample.depth_to" />
+                  </label>
+
+                  <label class="block">
+                    <span class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">Norte</span>
+                    <input class="h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 outline-hidden focus:border-brand-300 focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90" type="text" [(ngModel)]="sample.north" />
+                  </label>
+
+                  <label class="block">
+                    <span class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">Este</span>
+                    <input class="h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 outline-hidden focus:border-brand-300 focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90" type="text" [(ngModel)]="sample.east" />
+                  </label>
+
+                  <label class="block">
+                    <span class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">Elevacion</span>
+                    <input class="h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 outline-hidden focus:border-brand-300 focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90" type="text" [(ngModel)]="sample.elev" />
+                  </label>
+
+                  <label class="block md:col-span-2 xl:col-span-4">
+                    <span class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">Comentarios</span>
+                    <textarea class="min-h-20 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 outline-hidden focus:border-brand-300 focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90" [(ngModel)]="sample.comment"></textarea>
+                  </label>
+                </div>
+
+                <div class="mt-4 rounded-lg bg-gray-50 p-3 dark:bg-white/[0.03]">
+                  <p class="mb-3 text-sm font-semibold text-gray-800 dark:text-white/90">Ensayos</p>
+                  <div class="grid grid-cols-1 gap-2 md:grid-cols-2 xl:grid-cols-3">
+                    @for (test of testTypes; track test.value) {
+                      <label class="flex cursor-pointer items-center gap-2 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-300">
+                        <input
+                          type="checkbox"
+                          class="size-4 rounded border-gray-300 text-brand-500 focus:ring-brand-500"
+                          [checked]="hasTest(sample, test.value)"
+                          (change)="toggleTest(sample, test.value, $any($event.target).checked)"
+                        />
+                        <span>{{ test.label }}</span>
+                      </label>
+                    }
+                  </div>
+                </div>
+              </section>
+            }
+          </div>
+        </div>
+
+        <div class="flex flex-wrap items-center justify-between gap-3 border-t border-gray-200 px-5 py-4 dark:border-gray-800">
+          <button
+            type="button"
+            class="rounded-lg border border-error-300 px-4 py-2.5 text-sm font-medium text-error-700 transition hover:bg-error-50 dark:border-error-500/50 dark:text-error-300 dark:hover:bg-error-500/10"
+            (click)="deletePackage(item)"
+          >
+            Eliminar
+          </button>
+
+          <div class="flex gap-2">
+            <button
+              type="button"
+              class="rounded-lg border border-gray-300 px-4 py-2.5 text-sm font-medium text-gray-700 transition hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-white/[0.05]"
+              (click)="closeEdit()"
+            >
+              Cancelar
+            </button>
+            <button
+              type="button"
+              class="rounded-lg bg-brand-500 px-5 py-2.5 text-sm font-medium text-white shadow-theme-xs transition hover:bg-brand-600 disabled:cursor-not-allowed disabled:opacity-60"
+              [disabled]="saving()"
+              (click)="saveEdit()"
+            >
+              {{ saving() ? 'Guardando' : 'Guardar cambios' }}
+            </button>
+          </div>
+        </div>
+      </section>
+    </div>
+  }
+</div>
