@@ -6,7 +6,8 @@ import { AuthService } from '../../shared/services/auth.service';
 type LegacyOption = {
   title: string;
   description: string;
-  path: string;
+  path?: string;
+  routePath?: string;
 };
 
 type LegacyGroup = {
@@ -29,7 +30,7 @@ export class LegacyHubComponent {
     {
       title: 'Available menus',
       options: [
-        { title: 'Requisicion', description: 'Entrada y consulta de muestras recibidas.', path: '/components/menu_requisicion.php' },
+        { title: 'Requisicion', description: 'Entrada y consulta de muestras recibidas.', routePath: '/requisitions' },
         { title: 'Seguimiento', description: 'Control operativo, prioridades y planificacion.', path: '/components/menu_seguimiento.php' },
         { title: 'Ensayos de laboratorio', description: 'Hojas de trabajo y formularios tecnicos.', path: '/components/menu_hojasdetrabajos.php' },
         { title: 'Reportes', description: 'Reporteria, revisiones y resumenes.', path: '/components/menu_reportes.php' },

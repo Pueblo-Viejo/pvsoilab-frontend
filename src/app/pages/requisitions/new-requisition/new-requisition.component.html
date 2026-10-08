@@ -1,0 +1,347 @@
+<div>
+  <app-page-breadcrumb [pageTitle]="editingPackageId() ? 'Editar requisicion' : 'Nueva requisicion'" />
+
+  <form class="space-y-5" (ngSubmit)="save()">
+    <section class="rounded-lg border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]">
+      <div class="flex flex-col gap-4 border-b border-gray-200 px-5 py-4 dark:border-gray-800 xl:flex-row xl:items-center xl:justify-between">
+        <div>
+          <h3 class="text-lg font-semibold text-gray-800 dark:text-white/90">{{ editingPackageId() ? 'Editar requisicion' : 'Hoja de requisicion' }}</h3>
+          <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+            @if (editingPackageId()) {
+              Paquete {{ editingPackageId() }}. Puedes agregar, modificar o quitar muestras antes de guardar.
+            } @else {
+              Captura datos generales, muestras y ensayos en una sola vista de trabajo.
+            }
+          </p>
+        </div>
+
+        <div class="grid grid-cols-3 overflow-hidden rounded-lg border border-gray-200 text-center dark:border-gray-800">
+          <div class="px-4 py-2">
+            <p class="text-lg font-semibold text-gray-800 dark:text-white/90">{{ sampleCount() }}</p>
+            <p class="text-xs text-gray-500 dark:text-gray-400">Muestras</p>
+          </div>
+          <div class="border-x border-gray-200 px-4 py-2 dark:border-gray-800">
+            <p class="text-lg font-semibold text-gray-800 dark:text-white/90">{{ selectedTestCount() }}</p>
+            <p class="text-xs text-gray-500 dark:text-gray-400">Ensayos</p>
+          </div>
+          <div class="px-4 py-2">
+            <p class="max-w-32 truncate text-lg font-semibold text-gray-800 dark:text-white/90">{{ form.structure || '-' }}</p>
+            <p class="text-xs text-gray-500 dark:text-gray-400">Estructura</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="p-5">
+        <div class="space-y-5">
+          <section class="rounded-lg border border-gray-200 p-4 dark:border-gray-800">
+            <div class="mb-4 flex items-center justify-between gap-3">
+              <h4 class="text-base font-semibold text-gray-800 dark:text-white/90">Datos generales</h4>
+              <span class="rounded-full bg-gray-100 px-3 py-1 text-xs font-medium text-gray-600 dark:bg-white/[0.06] dark:text-gray-300">Obligatorio: fecha y muestreado por</span>
+            </div>
+
+            <div class="grid grid-cols-1 gap-4 md:grid-cols-2 2xl:grid-cols-4">
+              <label class="block md:col-span-2">
+                <span class="field-label">Nombre del proyecto</span>
+                <input class="field-input" type="text" name="project_name" placeholder="Ej. TSF Llagal - Campana Octubre" [(ngModel)]="form.project_name" />
+              </label>
+
+              <label class="block">
+                <span class="field-label">Cliente</span>
+                <select class="field-input" name="client" [(ngModel)]="form.client">
+                  <option value="">Elegir...</option>
+                  @for (client of clients; track client) {
+                    <option [value]="client">{{ client }}</option>
+                  }
+                </select>
+              </label>
+
+              <label class="block">
+                <span class="field-label">Numero del proyecto</span>
+                <input class="field-input" type="text" name="project_number" placeholder="Codigo interno" [(ngModel)]="form.project_number" />
+              </label>
+
+              <label class="block">
+                <span class="field-label">Estructura</span>
+                <select class="field-input" name="structure" [(ngModel)]="form.structure">
+                  <option value="">Seleccione...</option>
+                  @for (structure of structures; track structure) {
+                    <option [value]="structure">{{ structure }}</option>
+                  }
+                </select>
+              </label>
+
+              <label class="block">
+                <span class="field-label">Fecha de coleccion</span>
+                <input class="field-input" type="date" name="sample_date" required [(ngModel)]="form.sample_date" />
+              </label>
+
+              <label class="block">
+                <span class="field-label">Muestreado por</span>
+                <input class="field-input" type="text" name="sample_by" required placeholder="Nombre del responsable" [(ngModel)]="form.sample_by" />
+              </label>
+
+              <label class="block">
+                <span class="field-label">Cantidad de viajes</span>
+                <input class="field-input" type="text" name="truck_count" placeholder="Opcional" [(ngModel)]="form.truck_count" />
+              </label>
+            </div>
+          </section>
+
+          <section class="rounded-lg border border-gray-200 dark:border-gray-800">
+            <div class="flex flex-col gap-3 border-b border-gray-200 p-4 dark:border-gray-800 lg:flex-row lg:items-center lg:justify-between">
+              <div>
+                <h4 class="text-base font-semibold text-gray-800 dark:text-white/90">Muestras</h4>
+                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Selecciona una muestra y completa sus datos antes de guardar.</p>
+              </div>
+              <button
+                type="button"
+                class="inline-flex h-10 items-center justify-center rounded-lg bg-brand-500 px-4 text-sm font-medium text-white shadow-theme-xs transition hover:bg-brand-600"
+                (click)="addSample()"
+              >
+                Agregar muestra
+              </button>
+            </div>
+
+            <div class="border-b border-gray-200 px-4 py-3 dark:border-gray-800">
+              <div class="flex gap-2 overflow-x-auto pb-1">
+                @for (sample of samples; track $index) {
+                  <button
+                    type="button"
+                    class="min-w-48 rounded-lg border px-3 py-2 text-left transition"
+                    [class.border-brand-300]="activeSampleIndex() === $index"
+                    [class.bg-brand-50]="activeSampleIndex() === $index"
+                    [class.text-brand-700]="activeSampleIndex() === $index"
+                    [class.border-gray-200]="activeSampleIndex() !== $index"
+                    [class.bg-white]="activeSampleIndex() !== $index"
+                    [class.text-gray-700]="activeSampleIndex() !== $index"
+                    [class.dark:border-brand-500]="activeSampleIndex() === $index"
+                    [class.dark:bg-brand-500/10]="activeSampleIndex() === $index"
+                    [class.dark:text-brand-300]="activeSampleIndex() === $index"
+                    [class.dark:border-gray-800]="activeSampleIndex() !== $index"
+                    [class.dark:bg-gray-900]="activeSampleIndex() !== $index"
+                    [class.dark:text-gray-300]="activeSampleIndex() !== $index"
+                    (click)="selectSample($index)"
+                  >
+                    <span class="block text-sm font-semibold">Muestra {{ $index + 1 }}</span>
+                    <span class="mt-1 block truncate text-xs opacity-75">{{ sample.sample_number || 'Sin numero' }} / {{ sample.sample_id || 'Sin nombre' }}</span>
+                    <span class="mt-1 block text-xs opacity-75">{{ sample.tests.length }} ensayos</span>
+                  </button>
+                }
+              </div>
+            </div>
+
+            @for (sample of samples; track $index) {
+              @if (activeSampleIndex() === $index) {
+                <div class="space-y-5 p-4">
+                  <div class="flex flex-wrap items-center justify-between gap-3">
+                    <div>
+                      <h5 class="text-sm font-semibold uppercase text-gray-500 dark:text-gray-400">Editando muestra {{ $index + 1 }}</h5>
+                      <p class="mt-1 text-base font-semibold text-gray-800 dark:text-white/90">{{ sample.sample_number || 'Numero pendiente' }}</p>
+                    </div>
+                    <button
+                      type="button"
+                      class="rounded-lg border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-white/[0.05]"
+                      [disabled]="samples.length === 1"
+                      (click)="removeSample($index)"
+                    >
+                      Quitar muestra
+                    </button>
+                  </div>
+
+                  <div class="space-y-5">
+                      <div>
+                        <h6 class="mb-3 text-sm font-semibold text-gray-800 dark:text-white/90">Identificacion</h6>
+                        <div class="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+                          <label class="block">
+                            <span class="field-label">Nombre</span>
+                            <input class="field-input" type="text" required [name]="'sample_id_' + $index" placeholder="ID o descripcion" [(ngModel)]="sample.sample_id" />
+                          </label>
+
+                          <label class="block">
+                            <span class="field-label">Numero</span>
+                            <input class="field-input" type="text" required [name]="'sample_number_' + $index" placeholder="Ej. LLD-0001" [(ngModel)]="sample.sample_number" />
+                          </label>
+
+                          <label class="block">
+                            <span class="field-label">Area</span>
+                            <input class="field-input" type="text" [name]="'area_' + $index" placeholder="Area o zona" [(ngModel)]="sample.area" />
+                          </label>
+
+                          <label class="block">
+                            <span class="field-label">Fuente</span>
+                            <input class="field-input" type="text" [name]="'source_' + $index" placeholder="Origen de la muestra" [(ngModel)]="sample.source" />
+                          </label>
+
+                          <label class="block">
+                            <span class="field-label">Tipo de material</span>
+                            <select class="field-input" required [name]="'material_type_' + $index" [(ngModel)]="sample.material_type">
+                              <option value="">Elegir...</option>
+                              @for (type of materialTypes; track type) {
+                                <option [value]="type">{{ type }}</option>
+                              }
+                            </select>
+                          </label>
+
+                          <label class="block">
+                            <span class="field-label">Tipo de muestra</span>
+                            <select class="field-input" required [name]="'sample_type_' + $index" [(ngModel)]="sample.sample_type">
+                              <option value="">Elegir...</option>
+                              @for (type of sampleTypes; track type) {
+                                <option [value]="type">{{ type }}</option>
+                              }
+                            </select>
+                          </label>
+                        </div>
+                      </div>
+
+                      <div>
+                        <h6 class="mb-3 text-sm font-semibold text-gray-800 dark:text-white/90">Ubicacion y profundidad</h6>
+                        <div class="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-5">
+                          <label class="block">
+                            <span class="field-label">Desde</span>
+                            <input class="field-input" type="text" [name]="'depth_from_' + $index" placeholder="m" [(ngModel)]="sample.depth_from" />
+                          </label>
+
+                          <label class="block">
+                            <span class="field-label">Hasta</span>
+                            <input class="field-input" type="text" [name]="'depth_to_' + $index" placeholder="m" [(ngModel)]="sample.depth_to" />
+                          </label>
+
+                          <label class="block">
+                            <span class="field-label">Norte</span>
+                            <input class="field-input" type="text" [name]="'north_' + $index" [(ngModel)]="sample.north" />
+                          </label>
+
+                          <label class="block">
+                            <span class="field-label">Este</span>
+                            <input class="field-input" type="text" [name]="'east_' + $index" [(ngModel)]="sample.east" />
+                          </label>
+
+                          <label class="block">
+                            <span class="field-label">Elevacion</span>
+                            <input class="field-input" type="text" [name]="'elev_' + $index" [(ngModel)]="sample.elev" />
+                          </label>
+                        </div>
+                      </div>
+
+                      <label class="block">
+                        <span class="field-label">Comentarios</span>
+                        <textarea class="field-input min-h-24" [name]="'comment_' + $index" placeholder="Observaciones de recepcion, condiciones o instrucciones especiales" [(ngModel)]="sample.comment"></textarea>
+                      </label>
+                    <div class="flex flex-col gap-3 rounded-lg bg-gray-50 p-4 dark:bg-white/[0.03] sm:flex-row sm:items-center sm:justify-between">
+                      <div>
+                        <p class="text-sm font-semibold text-gray-800 dark:text-white/90">Ensayos de laboratorio</p>
+                        <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">{{ sample.tests.length }} seleccionados para esta muestra</p>
+                      </div>
+                      <button
+                        type="button"
+                        class="inline-flex h-10 items-center justify-center rounded-lg border border-gray-300 bg-white px-4 text-sm font-medium text-gray-700 transition hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 dark:hover:bg-white/[0.05]"
+                        (click)="openTestsModal($index)"
+                      >
+                        Seleccionar ensayos
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              }
+            }
+          </section>
+        </div>
+      </div>
+    </section>
+
+    @if (testsModalOpen()) {
+      <div class="fixed inset-0 z-99999 flex items-center justify-center bg-gray-900/50 p-4">
+        <div class="max-h-[90vh] w-full max-w-5xl overflow-hidden rounded-lg bg-white shadow-theme-xl dark:bg-gray-900">
+          <div class="flex flex-col gap-3 border-b border-gray-200 px-5 py-4 dark:border-gray-800 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <h3 class="text-lg font-semibold text-gray-800 dark:text-white/90">Seleccionar ensayos</h3>
+              <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                Muestra {{ activeSampleIndex() + 1 }} · {{ activeSample().sample_number || 'Sin numero' }} · {{ activeSample().tests.length }} seleccionados
+              </p>
+            </div>
+            <button
+              type="button"
+              class="rounded-lg border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-white/[0.05]"
+              (click)="closeTestsModal()"
+            >
+              Cerrar
+            </button>
+          </div>
+
+          <div class="max-h-[65vh] overflow-y-auto p-5">
+            <div class="grid grid-cols-1 gap-2 md:grid-cols-2 xl:grid-cols-3">
+              @for (test of testTypes; track test.value) {
+                <label
+                  class="flex min-h-11 cursor-pointer items-center gap-2 rounded-lg border px-3 py-2 text-sm transition"
+                  [class.border-brand-300]="hasTest(activeSample(), test.value)"
+                  [class.bg-brand-50]="hasTest(activeSample(), test.value)"
+                  [class.text-brand-700]="hasTest(activeSample(), test.value)"
+                  [class.border-gray-200]="!hasTest(activeSample(), test.value)"
+                  [class.bg-white]="!hasTest(activeSample(), test.value)"
+                  [class.text-gray-700]="!hasTest(activeSample(), test.value)"
+                  [class.dark:border-brand-500]="hasTest(activeSample(), test.value)"
+                  [class.dark:bg-brand-500/10]="hasTest(activeSample(), test.value)"
+                  [class.dark:text-brand-300]="hasTest(activeSample(), test.value)"
+                  [class.dark:border-gray-800]="!hasTest(activeSample(), test.value)"
+                  [class.dark:bg-gray-900]="!hasTest(activeSample(), test.value)"
+                  [class.dark:text-gray-300]="!hasTest(activeSample(), test.value)"
+                >
+                  <input
+                    type="checkbox"
+                    class="size-4 rounded border-gray-300 text-brand-500 focus:ring-brand-500"
+                    [checked]="hasTest(activeSample(), test.value)"
+                    (change)="toggleTest(activeSample(), test.value, $any($event.target).checked)"
+                  />
+                  <span>{{ test.label }}</span>
+                </label>
+              }
+            </div>
+          </div>
+
+          <div class="flex items-center justify-end border-t border-gray-200 px-5 py-4 dark:border-gray-800">
+            <button
+              type="button"
+              class="rounded-lg bg-brand-500 px-5 py-2.5 text-sm font-medium text-white shadow-theme-xs transition hover:bg-brand-600"
+              (click)="closeTestsModal()"
+            >
+              Listo
+            </button>
+          </div>
+        </div>
+      </div>
+    }
+
+    @if (error()) {
+      <div class="rounded-lg border border-error-200 bg-error-50 px-4 py-3 text-sm text-error-700 dark:border-error-500/30 dark:bg-error-500/10 dark:text-error-300">{{ error() }}</div>
+    }
+
+    @if (success()) {
+      <div class="rounded-lg border border-success-200 bg-success-50 px-4 py-3 text-sm text-success-700 dark:border-success-500/30 dark:bg-success-500/10 dark:text-success-300">
+        {{ success() }}
+        @if (packageId()) {
+          <span class="font-semibold">Paquete: {{ packageId() }}</span>
+        }
+      </div>
+    }
+
+    <div class="sticky bottom-4 z-20 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-gray-200 bg-white p-3 shadow-theme-md dark:border-gray-800 dark:bg-gray-900">
+      <a routerLink="/requisitions/registered-samples" class="rounded-lg border border-gray-300 px-4 py-2.5 text-sm font-medium text-gray-700 transition hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-white/[0.05]">Muestras registradas</a>
+      <div class="flex flex-wrap gap-2">
+        @if (editingPackageId()) {
+          <button
+            type="button"
+            class="rounded-lg border border-error-300 px-4 py-2.5 text-sm font-medium text-error-700 transition hover:bg-error-50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-error-500/50 dark:text-error-300 dark:hover:bg-error-500/10"
+            [disabled]="loading()"
+            (click)="deletePackage()"
+          >
+            Eliminar paquete
+          </button>
+        }
+        <button type="submit" class="rounded-lg bg-brand-500 px-5 py-2.5 text-sm font-medium text-white shadow-theme-xs transition hover:bg-brand-600 disabled:cursor-not-allowed disabled:opacity-60" [disabled]="loading()">
+          {{ loading() ? 'Guardando' : (editingPackageId() ? 'Guardar cambios' : 'Guardar requisicion') }}
+        </button>
+      </div>
+    </div>
+  </form>
+</div>
