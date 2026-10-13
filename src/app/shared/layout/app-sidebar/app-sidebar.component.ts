@@ -50,6 +50,7 @@ export class AppSidebarComponent {
       name: "Seguimiento",
       subItems: [
         { name: "Menu", path: "/tracking" },
+        { name: "Proceso de ensayos", path: "/tracking/process" },
         { name: "Prioridades", path: "/tracking/priorities" },
       ],
     },
