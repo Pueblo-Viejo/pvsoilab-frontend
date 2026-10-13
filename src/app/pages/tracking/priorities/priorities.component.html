@@ -111,8 +111,19 @@
                     <td class="px-4 py-4">
                       <div class="flex max-w-xl flex-wrap gap-1.5">
                         @for (test of item.tests; track test.norm) {
-                          <span [class]="'rounded-full border px-2 py-0.5 text-xs font-medium ' + testClass(test.done)">
-                            {{ test.done ? 'OK' : 'Pendiente' }} · {{ test.label }}
+                          <span [class]="'inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-xs font-medium ' + testClass(test.done)">
+                            @if (test.done) {
+                              <svg class="size-3.5 shrink-0" viewBox="0 0 16 16" fill="none" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M13.333 4L6 11.333 2.667 8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
+                              </svg>
+                              <span class="sr-only">Completado</span>
+                            } @else {
+                              <svg class="size-3.5 shrink-0" viewBox="0 0 16 16" fill="none" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M12 4 4 12M4 4l8 8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
+                              </svg>
+                              <span class="sr-only">Pendiente</span>
+                            }
+                            {{ test.label }}
                           </span>
                         }
                       </div>

@@ -10,6 +10,7 @@ import { RegisteredSamplesComponent } from './pages/requisitions/registered-samp
 import { NewRequisitionComponent } from './pages/requisitions/new-requisition/new-requisition.component';
 import { TrackingMenuComponent } from './pages/tracking/tracking-menu/tracking-menu.component';
 import { PrioritiesComponent } from './pages/tracking/priorities/priorities.component';
+import { SampleProcessComponent } from './pages/tracking/sample-process/sample-process.component';
 
 export const routes: Routes = [
   {
@@ -58,6 +59,11 @@ export const routes: Routes = [
         path: 'tracking/priorities',
         component: PrioritiesComponent,
         title: 'PV Soil Lab | Prioridades',
+      },
+      {
+        path: 'tracking/process',
+        component: SampleProcessComponent,
+        title: 'PV Soil Lab | Proceso de ensayos',
       },
       { path: 'invoice', redirectTo: '', pathMatch: 'full' },
       { path: 'line-chart', redirectTo: '', pathMatch: 'full' },

@@ -26,6 +26,13 @@ export class TrackingMenuComponent {
 
   readonly options: TrackingOption[] = [
     {
+      title: 'Proceso de ensayos',
+      description: 'Mueve muestras entre registrado, proceso, entrega y repeticion desde un solo tablero.',
+      icon: 'M4 7h10M4 12h16M4 17h10M16 15l3 3-3 3',
+      path: '/tracking/process',
+      tag: 'Angular',
+    },
+    {
       title: 'Prioridades',
       description: 'Revisa muestras pendientes, prioridad por cliente y avance de ensayos.',
       icon: 'M4 6h16M4 12h10M4 18h7M17 11l3 3-3 3',
@@ -33,31 +40,10 @@ export class TrackingMenuComponent {
       tag: 'Angular',
     },
     {
-      title: 'Preparacion',
-      description: 'Gestiona ensayos enviados a preparacion desde el flujo legacy.',
-      icon: 'M12 5v14M5 12h14',
-      legacyPath: '/pages/test-preparation.php',
-      tag: 'Legacy',
-    },
-    {
-      title: 'Realizacion',
-      description: 'Da seguimiento a ensayos en realizacion.',
-      icon: 'M5 12h4l2 7 4-14 2 7h2',
-      legacyPath: '/pages/test-realization.php',
-      tag: 'Legacy',
-    },
-    {
-      title: 'Entrega',
-      description: 'Consulta o registra entregas de ensayos terminados.',
-      icon: 'M6 7h12v10H6zM8 7V5h8v2M9 12l2 2 4-4',
-      legacyPath: '/pages/test-delivery.php',
-      tag: 'Legacy',
-    },
-    {
-      title: 'Revision',
-      description: 'Muestras pendientes de revision y control final.',
-      icon: 'M7 7h10M7 12h10M7 17h6',
-      legacyPath: '/pages/test-review.php',
+      title: 'Control concreto',
+      description: 'Controla las fechas de rotura de cilindros y cubos a 3, 7, 14 y 28 dias.',
+      icon: 'M7 4.75h10M8.75 4.75v4.5L6 15.5a3 3 0 0 0 2.75 4.25h6.5A3 3 0 0 0 18 15.5l-2.75-6.25v-4.5M8 14h8',
+      legacyPath: '/pages/control_ensayo_concreto.php',
       tag: 'Legacy',
     },
     {
